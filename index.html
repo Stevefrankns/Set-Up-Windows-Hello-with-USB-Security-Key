@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How to Set Up Windows Hello with a USB Security Key</title>
+<meta content="A complete guide to configuring FIDO2 passwordless login for Windows, plus how to secure and password-protect your standard USB pendrives." name="description"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&amp;family=Libre+Baskerville:wght@400;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+
+:root {
+  --color-newsprint: #F2EEE5;
+  --color-press-red: #CC0000;
+  --color-ink: #1A1A1A;
+  --color-rule: #C8C0B0;
+  --color-highlight: #FFF4A0;
+  --color-muted: #6B6460;
+  --color-primary-accent: #CC0000;
+  --color-secondary-accent: #FFF4A0;
+  --color-content-bg: #F2EEE5;
+  --color-body-text: #1A1A1A;
+  --color-border: #C8C0B0;
+  --radius-card: 0;
+  --shadow-card: none;
+  --color-paper: #FBF8EF;
+  --color-white: #FFFFFF;
+  --font-headline: 'Playfair Display', Georgia, serif;
+  --font-subhead: 'Libre Baskerville', Georgia, serif;
+  --font-caption: 'IBM Plex Sans', Arial, sans-serif;
+  --max-wide-width: 1220px;
+  --max-reading-width: 940px;
+  --section-padding-v: 72px;
+  --transition-speed: 0.28s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-subhead);
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at 15% 8%, rgba(204,0,0,0.045), transparent 28%),
+    repeating-linear-gradient(0deg, rgba(26,26,26,0.025) 0, rgba(26,26,26,0.025) 1px, transparent 1px, transparent 5px),
+    var(--color-newsprint);
+  line-height: 1.82;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(26,26,26,0.08) 0, rgba(26,26,26,0.08) 1px, transparent 1px, transparent 5px),
+    #fff;
+  animation: printReveal 800ms ease-out forwards;
+}
+
+@keyframes printReveal {
+  from { clip-path: inset(0 0 0 0); }
+  to { clip-path: inset(0 0 100% 0); }
+}
+
+h1, h2, h3, h4, h5, .site-name {
+  color: var(--color-ink);
+  line-height: 1.02;
+  text-transform: none;
+  letter-spacing: -0.018em;
+}
+
+h1 {
+  font-family: var(--font-headline);
+  font-size: clamp(2.75rem, 7.4vw, 5rem);
+  font-weight: 900;
+  margin-bottom: 1.3rem;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  position: relative;
+  font-family: var(--font-subhead);
+  font-size: clamp(1.85rem, 4.2vw, 3.05rem);
+  font-weight: 700;
+  margin: 3.2rem 0 1.3rem;
+  padding-top: 2.25rem;
+  border-top: 3px double var(--color-ink);
+}
+
+h2::before {
+  content: "SECURITY GUIDE | MAY 2026 | 4 MIN READ";
+  position: absolute;
+  top: .55rem;
+  left: 0;
+  font-family: var(--font-headline);
+  font-size: .72rem;
+  letter-spacing: .12em;
+  color: var(--color-press-red);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+h3 {
+  font-family: var(--font-subhead);
+  font-size: 1.32rem;
+  font-weight: 700;
+  margin: 2.2rem 0 .8rem;
+  color: var(--color-ink);
+}
+
+h4 {
+  font-family: var(--font-subhead);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: .55rem;
+}
+
+p { margin-bottom: 1.35rem; }
+ul, ol { margin: 0 0 1.5rem 1.5rem; }
+li { margin-bottom: .55rem; }
+strong { font-weight: 700; color: var(--color-ink); }
+
+p, li, label, .faq-content-inner {
+  text-shadow: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-press-red);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: all var(--transition-speed);
+}
+a:hover { color: var(--color-ink); background: var(--color-highlight); }
+
+.container { max-width: var(--max-reading-width); margin: 0 auto; padding: 0 24px; }
+.container-wide { max-width: var(--max-wide-width); margin: 0 auto; padding: 0 24px; }
+
+section {
+  padding: var(--section-padding-v) 0;
+  scroll-margin-top: 150px;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.bg-tint {
+  background-color: rgba(255,255,255,0.28) !important;
+  border: 1px solid var(--color-rule);
+  box-shadow: inset 0 0 0 6px rgba(255,255,255,0.18);
+}
+
+/* Masthead / Header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--color-newsprint);
+  border-bottom: 1px solid var(--color-ink);
+  box-shadow: 0 4px 0 rgba(26,26,26,0.06);
+}
+
+.masthead {
+  background: var(--color-ink);
+  color: var(--color-white);
+  padding: 14px 24px 13px;
+  text-align: center;
+}
+
+.masthead-brand,
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.site-name {
+  display: inline-block;
+  font-family: var(--font-headline);
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  font-weight: 700;
+  color: var(--color-white);
+  text-decoration: none;
+  letter-spacing: .045em;
+  word-spacing: .16em;
+}
+
+.site-name:hover {
+  color: var(--color-white);
+  background: transparent;
+}
+
+.security-mark {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid currentColor;
+  background: var(--color-press-red);
+  color: #fff;
+  box-shadow: 4px 4px 0 rgba(255,255,255,.16);
+}
+.security-mark svg {
+  width: 27px;
+  height: 27px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.press-rule {
+  height: 6px;
+  background: var(--color-press-red);
+  border-bottom: 1px solid var(--color-ink);
+}
+
+.breaking-ticker {
+  overflow: hidden;
+  background: var(--color-highlight);
+  border-bottom: 1px solid var(--color-ink);
+  white-space: nowrap;
+}
+
+.ticker-track {
+  display: inline-flex;
+  gap: 28px;
+  min-width: max-content;
+  padding: 8px 0;
+  animation: tickerMove 24s linear infinite;
+  font-family: var(--font-caption);
+  font-size: .79rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--color-ink);
+}
+.ticker-track span::before {
+  content: "■";
+  color: var(--color-press-red);
+  margin-right: 10px;
+}
+@keyframes tickerMove {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.header-inner {
+  min-height: 56px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.nav-menu {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nav-menu a {
+  font-family: var(--font-caption);
+  font-size: .79rem;
+  letter-spacing: .08em;
+  text-decoration: none;
+  color: var(--color-ink);
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+}
+.nav-menu a:hover {
+  color: var(--color-press-red);
+  background: transparent;
+  border-bottom-color: var(--color-press-red);
+}
+
+.mobile-btn {
+  display: none;
+  font-size: 1.65rem;
+  background: var(--color-newsprint);
+  border: 2px solid var(--color-ink);
+  cursor: pointer;
+  color: var(--color-ink);
+  padding: 4px 10px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 22px;
+  font-family: var(--font-subhead);
+  font-size: .93rem;
+  font-weight: 700;
+  border-radius: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  border: 2px solid var(--color-ink);
+  background: transparent;
+  color: var(--color-ink);
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--color-ink);
+  background: var(--color-highlight);
+  color: var(--color-ink);
+}
+.btn-primary {
+  background-color: var(--color-press-red);
+  color: var(--color-white);
+  border-color: var(--color-ink);
+}
+.btn-primary:hover {
+  background-color: var(--color-highlight);
+  color: var(--color-ink);
+}
+.btn-outline {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+/* Hero */
+.hero {
+  padding: 46px 0 54px;
+  background: var(--color-newsprint);
+  border-bottom: 4px double var(--color-ink);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr minmax(260px, .74fr);
+  gap: 34px;
+  align-items: start;
+  column-rule: 1px solid var(--color-rule);
+}
+
+.hero-story {
+  grid-column: span 2;
+  animation: columnBuild .52s ease both;
+}
+
+.breadcrumb {
+  display: inline-block;
+  font-family: var(--font-caption);
+  font-size: .78rem;
+  color: var(--color-muted);
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  border-top: 2px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-rule);
+  padding: 6px 0;
+}
+
+.meta-bar {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-rule);
+  border-bottom: 1px solid var(--color-rule);
+  padding: 10px 0;
+  margin-top: 20px;
+  font-family: var(--font-caption);
+  font-size: .82rem;
+  color: var(--color-muted);
+}
+
+.quick-answer {
+  background-color: transparent;
+  border: 2px solid var(--color-ink);
+  border-left: 9px solid var(--color-press-red);
+  padding: 24px;
+  margin-top: 30px;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 rgba(26,26,26,.12);
+}
+.quick-answer-label {
+  display: block;
+  font-family: var(--font-caption);
+  color: var(--color-white);
+  background: var(--color-press-red);
+  margin: -24px -24px 18px;
+  padding: 8px 14px;
+  font-size: .78rem;
+  letter-spacing: .1em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.quick-answer p:last-child { margin-bottom: 0; }
+
+.news-brief {
+  background: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  padding: 18px;
+  box-shadow: 6px 6px 0 rgba(26,26,26,.15);
+  animation: columnBuild .6s .3s ease both;
+}
+.brief-label {
+  display: inline-block;
+  background: var(--color-press-red);
+  color: var(--color-white);
+  font-family: var(--font-caption);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  padding: 4px 8px;
+  margin-bottom: 10px;
+}
+.news-brief h3 {
+  font-family: var(--font-headline);
+  margin: .35rem 0 .8rem;
+  font-size: 1.55rem;
+  border-bottom: 3px double var(--color-ink);
+  padding-bottom: 8px;
+}
+.brief-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.brief-list span {
+  font-family: var(--font-caption);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-top: 1px solid var(--color-rule);
+  padding-top: 8px;
+}
+
+/* Layout */
+.layout-grid {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 48px;
+  align-items: start;
+  margin: 40px auto;
+}
+
+.toc {
+  position: sticky;
+  top: 156px;
+  background: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  border-radius: 0;
+  padding: 20px;
+  box-shadow: 5px 5px 0 rgba(26,26,26,.14);
+}
+.toc h4 {
+  border-bottom: 3px double var(--color-ink);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  font-family: var(--font-headline);
+}
+.toc ul { list-style: none; margin: 0; }
+.toc li { margin-bottom: 10px; }
+.toc a {
+  text-decoration: none;
+  font-family: var(--font-caption);
+  font-size: .78rem;
+  color: var(--color-muted);
+  display: block;
+  padding-left: 10px;
+  border-left: 3px solid transparent;
+  line-height: 1.4;
+}
+.toc a:hover, .toc a.active {
+  color: var(--color-press-red);
+  background: transparent;
+  border-left-color: var(--color-press-red);
+  font-weight: 700;
+}
+
+/* 3-column editorial flow */
+main > section:not(.saas-moment):not(#quiz):not(#comparison):not(#faq):not(#tutorial):not(#data-privacy):not(#troubleshooting) > p,
+main > section:not(.saas-moment):not(#quiz):not(#comparison):not(#faq):not(#tutorial):not(#data-privacy):not(#troubleshooting) > ul,
+main > section:not(.saas-moment):not(#quiz):not(#comparison):not(#faq):not(#tutorial):not(#data-privacy):not(#troubleshooting) > ol {
+  column-count: 3;
+  column-gap: 34px;
+  column-rule: 1px solid var(--color-rule);
+}
+
+@keyframes columnBuild {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+main > section {
+  animation: columnBuild .58s ease both;
+}
+main > section:nth-of-type(2) { animation-delay: 150ms; }
+main > section:nth-of-type(3) { animation-delay: 300ms; }
+
+.split-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 34px;
+  align-items: start;
+}
+.split-grid > div:first-child {
+  column-count: 2;
+  column-gap: 32px;
+  column-rule: 1px solid var(--color-rule);
+}
+.split-grid h2,
+.split-grid .content-image,
+.split-grid p:first-of-type {
+  break-inside: avoid;
+}
+.callout-box {
+  background: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  padding: 22px;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 rgba(26,26,26,.12);
+}
+.callout-box h4 {
+  background: var(--color-ink);
+  color: var(--color-white);
+  margin: -22px -22px 16px;
+  padding: 10px 14px;
+}
+
+/* Images */
+.content-image {
+  margin: 20px 0 24px;
+  break-inside: avoid;
+}
+.content-image img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  border: 2px solid var(--color-ink);
+  background: var(--color-paper);
+  box-shadow: 5px 5px 0 rgba(26,26,26,.12);
+}
+.brief-image { margin: 12px 0 16px; }
+.callout-image { margin-top: 20px; }
+.feature-image img { max-height: 260px; object-fit: contain; }
+.product-image-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 28px 0;
+}
+.product-image { margin: 0; }
+.product-image img { height: 220px; object-fit: contain; padding: 12px; background: #fff; }
+.cta-image {
+  max-width: 680px;
+  margin: 0 auto 26px;
+}
+
+/* Product/SaaS section as front-page feature */
+.saas-moment {
+  background-color: var(--color-ink);
+  color: var(--color-white);
+  padding: 64px 34px;
+  border-radius: 0;
+  margin: 64px 0;
+  text-align: left;
+  border: 3px solid var(--color-ink);
+  box-shadow: 8px 8px 0 var(--color-press-red);
+}
+.saas-moment h2 {
+  color: var(--color-white);
+  font-family: var(--font-headline);
+  font-size: clamp(2rem, 4.4vw, 3.3rem);
+  margin-bottom: 20px;
+  border-top-color: var(--color-white);
+}
+.saas-moment h2::before { color: var(--color-highlight); }
+.saas-moment p { color: #f7f2e8; max-width: 900px; }
+.saas-moment a { color: var(--color-highlight); }
+.device-mockup {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 0;
+  padding: 18px;
+  max-width: none;
+  margin: 18px 0 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+}
+.mockup-chip {
+  background: var(--color-highlight);
+  color: var(--color-ink);
+  padding: 7px 12px;
+  border-radius: 0;
+  font-family: var(--font-caption);
+  font-size: .78rem;
+  font-weight: 700;
+  border: 1px solid var(--color-ink);
+}
+.saas-actions { display: flex; gap: 16px; justify-content: flex-start; flex-wrap: wrap; }
+.saas-moment .btn-primary { background: var(--color-press-red); color: var(--color-white); }
+.saas-moment .btn-outline { color: var(--color-ink); border-color: var(--color-ink); background: var(--color-highlight); }
+
+/* Pull quote treatment through strong blocks and feature numbering */
+.big-numbers {
+  counter-reset: feature-counter;
+  list-style: none;
+  margin: 0;
+}
+.big-numbers li {
+  position: relative;
+  padding: 24px 24px 24px 94px;
+  margin-bottom: 28px;
+  border: 2px solid var(--color-ink);
+  background: rgba(255,255,255,.24);
+}
+.big-numbers li::before {
+  counter-increment: feature-counter;
+  content: "0" counter(feature-counter);
+  position: absolute;
+  left: 18px;
+  top: 20px;
+  font-family: var(--font-headline);
+  font-size: 3.35rem;
+  font-weight: 900;
+  color: var(--color-press-red);
+  line-height: .9;
+}
+.big-numbers h4 {
+  font-family: var(--font-headline);
+  font-size: 1.55rem;
+}
+
+/* Comparison: broadsheet table */
+.compare-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border: 2px solid var(--color-ink);
+  background: var(--color-paper);
+}
+.compare-card {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.compare-card + .compare-card { border-left: 1px solid var(--color-ink); }
+.compare-card::before { display: none; }
+.compare-card h4 {
+  background: var(--color-press-red);
+  color: var(--color-white) !important;
+  padding: 14px 16px;
+  margin: 0 !important;
+  font-family: var(--font-headline);
+  font-size: 1.45rem !important;
+  border-bottom: 2px solid var(--color-ink);
+}
+.compare-card.winner {
+  box-shadow: none;
+  border-color: transparent;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--color-rule);
+  font-family: var(--font-caption);
+  font-size: .9rem;
+}
+.compare-row:last-child { border-bottom: none; }
+.compare-label { font-weight: 700; color: var(--color-muted); }
+.compare-val { text-align: right; font-weight: 600; }
+
+/* Interactive Tool */
+.tool-box {
+  background: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  padding: 30px;
+  border-radius: 0;
+  margin: 28px 0;
+  box-shadow: 6px 6px 0 rgba(26,26,26,.12);
+}
+.quiz-group { margin-bottom: 24px; }
+.quiz-group p {
+  font-weight: 700;
+  margin-bottom: 12px;
+  font-size: 1.02rem;
+}
+.quiz-option {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--color-rule);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background .2s;
+  background: rgba(255,255,255,.32);
+}
+.quiz-option:hover { background: var(--color-highlight); }
+.quiz-option input { margin-right: 10px; transform: scale(1.15); }
+#quiz-result {
+  display: none;
+  margin-top: 22px;
+  padding: 20px;
+  background: var(--color-highlight);
+  border-left: 8px solid var(--color-press-red);
+}
+
+/* Article expand */
+.article-expand {
+  max-height: 200px;
+  overflow: hidden;
+  transition: max-height 500ms ease;
+  position: relative;
+}
+.article-expand::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 70px;
+  background: linear-gradient(to bottom, rgba(242,238,229,0), var(--color-newsprint));
+  pointer-events: none;
+}
+.article-expand.is-open {
+  max-height: 1200px;
+}
+.article-expand.is-open::after { display: none; }
+.read-more-btn {
+  margin-top: 14px;
+  background: var(--color-press-red);
+  color: var(--color-white);
+  border: 2px solid var(--color-ink);
+  padding: 10px 18px;
+  font-family: var(--font-subhead);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+
+/* Code */
+.code-block {
+  position: relative;
+  background: var(--color-ink);
+  color: #f7f2e8;
+  padding: 24px;
+  border-radius: 0;
+  margin: 24px 0;
+  font-family: var(--font-caption);
+  font-size: .9rem;
+  overflow-x: auto;
+  border: 2px solid var(--color-ink);
+}
+.copy-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--color-highlight);
+  border: 1px solid var(--color-white);
+  color: var(--color-ink);
+  padding: 4px 12px;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: .78rem;
+  font-family: var(--font-caption);
+  font-weight: 700;
+}
+
+/* FAQ two-column advice column */
+.faq-list {
+  border-top: 2px solid var(--color-ink);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+}
+.faq-item {
+  border-bottom: 1px solid var(--color-rule);
+  break-inside: avoid;
+}
+.faq-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 20px 0;
+  font-family: var(--font-subhead);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faq-preview {
+  font-family: var(--font-caption);
+  font-size: .78rem;
+  color: var(--color-muted);
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 38%;
+  margin-left: 14px;
+  opacity: .9;
+}
+.faq-icon {
+  font-size: 1.45rem;
+  font-weight: 400;
+  transition: transform .3s;
+  color: var(--color-press-red);
+}
+.faq-btn[aria-expanded="true"] .faq-icon { transform: rotate(45deg); }
+.faq-btn[aria-expanded="true"] .faq-preview { display: none; }
+.faq-content { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.faq-content-inner { padding-bottom: 22px; }
+
+/* Footer */
+footer {
+  background-color: var(--color-ink);
+  color: #e8dfcc;
+  padding: 68px 24px 30px;
+  font-family: var(--font-caption);
+  font-size: .85rem;
+  border-top: 6px solid var(--color-press-red);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  gap: 40px;
+  max-width: var(--max-wide-width);
+  margin: 0 auto;
+}
+.footer-col h4 {
+  color: var(--color-white);
+  margin-bottom: 18px;
+  font-family: var(--font-headline);
+  letter-spacing: .04em;
+  word-spacing: .16em;
+}
+.footer-brand {
+  justify-content: flex-start;
+  margin-bottom: 14px;
+}
+.footer-brand h4 { margin: 0; }
+.footer-col ul { list-style: none; margin: 0; }
+.footer-col li { margin-bottom: 10px; }
+.footer-col a { color: #e8dfcc; text-decoration: none; }
+.footer-col a:hover {
+  color: var(--color-white);
+  text-decoration: underline;
+  background: transparent;
+}
+.footer-bottom {
+  max-width: var(--max-wide-width);
+  margin: 56px auto 0;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255,255,255,.22);
+  text-align: center;
+}
+.disclaimer {
+  font-style: italic;
+  max-width: 760px;
+  margin: 0 auto 20px;
+  opacity: .78;
+}
+
+/* Hover highlighter sweep */
+@media (hover: hover) and (pointer: fine) {
+  p, li, .faq-content-inner {
+    background-image: linear-gradient(var(--color-highlight), var(--color-highlight));
+    background-repeat: no-repeat;
+    background-position: 0 70%;
+    background-size: 0 42%;
+    transition: background-size 420ms ease;
+  }
+  p:hover, li:hover, .faq-content-inner:hover {
+    background-size: 100% 42%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1060px) {
+  .layout-grid { grid-template-columns: 1fr; }
+  .toc { display: none; }
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-story { grid-column: auto; }
+  .split-grid { grid-template-columns: 1fr; }
+  .split-grid > div:first-child { column-count: 1; }
+  main > section:not(.saas-moment):not(#quiz):not(#comparison):not(#faq):not(#tutorial):not(#data-privacy):not(#troubleshooting) > p,
+  main > section:not(.saas-moment):not(#quiz):not(#comparison):not(#faq):not(#tutorial):not(#data-privacy):not(#troubleshooting) > ul,
+  main > section:not(.saas-moment):not(#quiz):not(#comparison):not(#faq):not(#tutorial):not(#data-privacy):not(#troubleshooting) > ol {
+    column-count: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .masthead { padding: 12px 16px; }
+  .security-mark { width: 36px; height: 36px; }
+  .header-inner {
+    min-height: auto;
+    justify-content: flex-end;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-newsprint);
+    flex-direction: column;
+    padding: 22px;
+    border-bottom: 2px solid var(--color-ink);
+    box-shadow: 0 8px 0 rgba(26,26,26,.14);
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .nav-menu.is-open { display: flex; }
+  .mobile-btn { display: block; }
+  .product-image-strip,
+  .compare-wrap,
+  .faq-list,
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+  .compare-card + .compare-card {
+    border-left: 0;
+    border-top: 2px solid var(--color-ink);
+  }
+  .saas-actions { flex-direction: column; }
+  .saas-actions .btn { width: 100%; }
+  .faq-preview { display: none; }
+  section { padding: 54px 0; }
+  h1 { font-size: clamp(2.6rem, 12vw, 3.4rem); }
+}
+
+</style>
+</head>
+<body>
+<header id="header">
+<div class="masthead">
+<div class="masthead-brand">
+<span aria-hidden="true" class="security-mark">
+<svg focusable="false" role="img" viewbox="0 0 64 64">
+<rect height="36" rx="3" width="50" x="7" y="16"></rect>
+<path d="M18 16v-3c0-7.2 5.8-13 14-13s14 5.8 14 13v3"></path>
+<path d="M24 16v-3c0-4 3.1-7 8-7s8 3 8 7v3"></path>
+<circle cx="32" cy="34" r="5"></circle>
+<path d="M32 39v7"></path>
+</svg>
+</span>
+<a class="site-name" href="#">Hello Security Hub</a>
+</div>
+</div>
+<div aria-hidden="true" class="press-rule"></div>
+<div aria-label="Security guide highlights" class="breaking-ticker">
+<div class="ticker-track">
+<span>BREAKING: WINDOWS HELLO</span>
+<span>USB SECURITY KEY</span>
+<span>FIDO2 SETUP</span>
+<span>PORTABLE DATA ENCRYPTION</span>
+<span>FOLDER LOCK</span>
+<span>USB SECURE</span>
+<span>BREAKING: WINDOWS HELLO</span>
+<span>USB SECURITY KEY</span>
+<span>FIDO2 SETUP</span>
+<span>PORTABLE DATA ENCRYPTION</span>
+<span>FOLDER LOCK</span>
+<span>USB SECURE</span>
+</div>
+</div>
+<div class="container-wide header-inner"><nav class="nav-menu" id="nav-menu">
+<a href="#intent-gap">Overview</a>
+<a href="#fido2-setup">FIDO2 Setup</a>
+<a href="#usb-protection">USB Protection</a>
+<a href="#comparison">Comparison</a>
+<a href="#faq">FAQ</a>
+<a href="#usb-protection" style="color: var(--color-primary-accent);">See Our Top Pick &rarr;</a>
+</nav><button aria-label="Toggle Navigation" class="mobile-btn" id="mobile-btn">☰</button></div>
+</header>
+<article class="hero" id="top"><div class="container-wide hero-grid"><div class="hero-story"><div class="breadcrumb">Security Guides / Authentication / Portable Data</div><h1>How to Set Up Windows Hello with a USB Security Key</h1><p>Whether you are attempting to configure a specialized hardware key for passwordless OS login, or searching for a way to password-protect the sensitive files stored on your everyday flash drive, the methodology matters. We break down the exact protocols for both.</p><div class="meta-bar">
+<span>By the Editorial Team</span>
+<span>Updated: May 2026</span>
+<span>14 min read</span>
+</div><div class="quick-answer">
+<span class="quick-answer-label">Quick Answer / TL;DR</span>
+<p><strong>To set up a FIDO2 Security Key for Windows login:</strong> Go to Windows Settings &gt; Accounts &gt; Sign-in options &gt; Security Key. Click Manage, insert your YubiKey or compatible device, touch the sensor, and establish a hardware PIN.</p>
+<p><strong>To password-protect files on a standard pendrive:</strong> Windows Hello <em>does not</em> natively encrypt files on external storage. You must use dedicated <a href="https://windowsreport.com/encrypt-usb-flash-drive-windows/" rel="noopener noreferrer" target="_blank">portable encryption software</a> to create an encrypted, password-protected virtual vault directly on the drive.</p>
+</div></div><aside aria-label="News brief" class="news-brief">
+<div class="brief-label">BREAKING</div><figure class="content-image brief-image"><img alt="USB security key used for Windows Hello passwordless authentication" decoding="async" loading="lazy" src="https://i.ibb.co/LdhVNTRm/what-is-a-usb-security-key.jpg"/></figure>
+<h3>News Brief</h3>
+<p>Windows Hello secures access to the operating system; dedicated encryption secures the data you carry.</p>
+<div class="brief-list">
+<span>FIDO2</span>
+<span>Passwordless Login</span>
+<span>USB Encryption</span>
+</div>
+</aside></div></article>
+<div class="container-wide layout-grid">
+<!-- Sticky TOC -->
+<aside>
+<nav class="toc" id="toc-nav">
+<h4>Table of Contents</h4>
+<ul>
+<li><a href="#intent-gap">Resolving the Search Intent Gap</a></li>
+<li><a href="#fido2-setup">Log Into Windows with a Security Key</a></li>
+<li><a href="#webauthn">How FIDO2 Actually Works</a></li>
+<li><a href="#usb-protection">Securing the Standard Pendrive</a></li>
+<li><a href="#features">What to Look for in USB Security</a></li>
+<li><a href="#comparison">Method Comparison Table</a></li>
+<li><a href="#quiz">Which Tool Do You Need?</a></li>
+<li><a href="#data-privacy">Data Privacy vs. Data Security</a></li>
+<li><a href="#troubleshooting">Troubleshooting &amp; Log Events</a></li>
+<li><a href="#faq">Frequently Asked Questions</a></li>
+</ul>
+</nav>
+</aside>
+<!-- Main Content -->
+<main>
+<section class="split-grid" id="intent-gap" style="padding-top: 0;">
+<div>
+<h2>Resolving the Search Intent Gap</h2>
+<p>When users search for ways to combine USBs and Windows security, they typically fall into two completely different camps.</p>
+<p>The first group wants to embrace a passwordless future. They have purchased a hardware token (like a YubiKey) and want to use it as a physical credential to unlock their Windows 10 or Windows 11 machine. This relies on the WebAuthn standard integrated into Windows Hello.</p>
+<p>The second group is looking to secure their physical data. They have a standard thumb drive containing sensitive information (financial records, legal documents, personal media) and want to ensure that if the drive is lost, the finder cannot read the files. They assume Windows Hello can lock the drive.</p>
+<p><strong>It cannot.</strong> Windows Hello secures access to the operating system; it does not natively encrypt individual flash drives for portable cross-computer use. To achieve true portable security, you require dedicated endpoint software.</p>
+</div>
+<div>
+<div class="callout-box">
+<h4>Prerequisites</h4>
+<ul>
+<li><strong>For OS Login:</strong> A <a href="https://uk.pcmag.com/guide/78973/the-ultimate-usb-key" rel="noopener noreferrer" target="_blank">FIDO2-certified security key</a> (USB-A, USB-C, or NFC) and Windows 10 (Version 1903+) or Windows 11.</li>
+<li><strong>For Drive Protection:</strong> Any standard USB flash drive (FAT32, NTFS, exFAT) and a reliable portable encryption utility.</li>
+</ul>
+<figure class="content-image callout-image"><img alt="Standard USB flash drive that needs portable data protection" decoding="async" loading="lazy" src="https://i.ibb.co/Vc9p4g29/photo-of-a-USB-stick.jpg"/></figure></div>
+</div>
+</section>
+<section class="bg-tint" id="fido2-setup" style="padding: 64px 40px; border-radius: var(--radius-card);">
+<h2>Log Into Windows with a USB Security Key &mdash; Passwordless</h2>
+<p>If you have a certified hardware token, configuring it as your primary authentication method is relatively simple. This process binds a physical object to your Microsoft Account or Azure AD profile.</p><figure class="content-image"><img alt="USB security key plugged into a computer for authentication setup" decoding="async" loading="lazy" src="https://i.ibb.co/twHL35yP/USB-drive-successful-plugged.jpg"/></figure>
+<h3>Step-by-Step Setup Guide</h3>
+<ol>
+<li><strong>Access Sign-in Options:</strong> Press <code>Windows Key + I</code> to open Settings. Navigate to <strong>Accounts</strong>, then select <strong>Sign-in options</strong>.</li>
+<li><strong>Initiate Security Key:</strong> Locate the <strong>Security Key</strong> section (often listed under "Ways to sign in"). Click it, then click <strong>Manage</strong>.</li>
+<li><strong>Insert the Hardware:</strong> When prompted, insert your FIDO2 key into an available USB port. Wait a moment for Windows to recognize the device.</li>
+<li><strong>Physical Presence Check:</strong> The key will begin flashing. Touch the gold contact point or button on the key. This proves a human is physically present, thwarting remote automated attacks.</li>
+<li><strong>Establish the Hardware PIN:</strong> You will be required to set up a PIN. This PIN is stored on the security key itself, not on Windows. If someone steals your physical key, they still need this PIN to use it.</li>
+</ol>
+</section>
+<section id="webauthn">
+<h2>FIDO2 and Windows Hello: How They Work Together</h2>
+<p>FIDO2 (Fast Identity Online) and the <a href="https://uk.pcmag.com/guide/78973/the-ultimate-usb-key" rel="noopener noreferrer" target="_blank">WebAuthn API</a> fundamentally change how authentication works by eliminating shared secrets.</p><figure class="content-image"><img alt="Digital and physical security working together through hardware authentication" decoding="async" loading="lazy" src="https://i.ibb.co/chqG7MnN/digital-and-physical-security.jpg"/></figure>
+<p>When you use a standard password, the server holds a hashed version of your secret, and you transmit your secret over the network. If the server is breached, your hash is stolen. FIDO2 utilizes public key cryptography.</p>
+<p>During the setup process described above, your USB key generates a unique cryptographic key pair for your Windows machine. The public key is registered with Windows (or Microsoft's servers), while the private key remains locked inside the tamper-proof hardware chip on your USB device. The private key can never be extracted or duplicated.</p>
+<p>When you log in, Windows issues a cryptographic challenge. Your USB key signs this challenge using the private key&mdash;but only after you touch the sensor and enter your PIN. Windows verifies the signature using the public key. Because the private key never travels across the connection, phishing and man-in-the-middle attacks become cryptographically impossible.</p>
+</section>
+<!-- PREMIUM SAAS MOMENT -->
+<section class="saas-moment" id="usb-protection">
+<h2>The Tool We Recommend for Securing Portable Data</h2>
+<p>While Windows Hello protects your computer, it leaves the data on your flash drives completely exposed. If you drop a pendrive full of sensitive documents in a coffee shop, anyone who plugs it in can read it. To prevent data leaks, we recommend deploying a dedicated encryption tool like <a href="https://newsoftwares.net/" rel="noopener noreferrer" target="_blank">Folder Lock</a>.</p><div class="product-image-strip"><figure class="content-image product-image"><img alt="Folder Lock 10 product boxshot for file encryption and portable lockers" decoding="async" loading="lazy" src="https://i.ibb.co/xSFPPmSR/folder-lock-10-boxshot-new-4.png"/></figure><figure class="content-image product-image"><img alt="USB Secure software boxshot for password protecting portable drives" decoding="async" loading="lazy" src="https://i.ibb.co/dJX03kDG/usb-secure-product-box-screenshot.jpg"/></figure><figure class="content-image product-image"><img alt="USB Secure password dialog for unlocking protected drive data" decoding="async" loading="lazy" src="https://i.ibb.co/NnprhyFP/usb-secure-password-dialog-screenshot.jpg"/></figure></div>
+<div class="device-mockup">
+<span class="mockup-chip">AES 256-Bit Military Grade Encryption</span>
+<span class="mockup-chip">Cross-Platform (Win, Mac, iOS, Android)</span>
+<span class="mockup-chip">No Admin Privileges Required</span>
+<span class="mockup-chip">Virtual Drive Mounting</span>
+</div>
+<p>Instead of relying on OS-level permissions that break when you move to a different computer, tools like Folder Lock convert your standard thumb drive into an encrypted vault. The software travels on the drive itself. When you plug it into any Windows machine, you simply run the portable executable, enter your password, and your hidden files become securely accessible via an isolated virtual instance.</p>
+<div class="saas-actions">
+<a class="btn btn-primary" href="https://www.newsoftwares.net/download/folderlock10-en/folder-lock-en.exe" rel="noopener noreferrer" target="_blank">Try Folder Lock Free &rarr;</a>
+<a class="btn btn-outline" href="https://store.newsoftwares.net/?add=fl10" rel="noopener noreferrer" target="_blank">Explore Pricing &amp; Features &rarr;</a>
+</div>
+</section>
+<section id="features">
+<h2>What to Look for in USB Security</h2>
+<p>When securing external media, the software architecture matters immensely. Here are the core capabilities you should demand from any portable data protection tool:</p>
+<ul class="big-numbers">
+<li>
+<h4>Cross-Platform Ecosystem &amp; Cloud Sync</h4>
+<p>Modern security shouldn't trap your data on a single device. Advanced utilities (like Folder Lock 10) allow you to create lockers on Windows, and sync them seamlessly to Mac, iOS, and Android ecosystems. Premium tiers even allow syncing encrypted lockers across up to 5 devices simultaneously using standard cloud providers (Dropbox, Google Drive).</p>
+<figure class="content-image feature-image"><img alt="Folder Lock portable lockers screen for securing files on USB drives" decoding="async" loading="lazy" src="https://i.ibb.co/wNkcx3WC/folder-lock-10-screenshot-safeguard-portable-lockers.png"/></figure></li>
+<li>
+<h4>Memory-Mapped Virtual Access</h4>
+<p>Older security tools required you to fully decrypt files back onto the physical flash drive to read them&mdash;a slow process that left temporary file traces on the host computer. Superior tools mount the encrypted container as a temporary Virtual Drive. You access the files securely in memory, and the moment you eject the drive or close the app, all traces vanish instantly.</p>
+<figure class="content-image feature-image"><img alt="Virtual drive feature for accessing encrypted files securely" decoding="async" loading="lazy" src="https://i.ibb.co/gZrxkVx6/Virtual-Drive-Feature.jpg"/></figure></li>
+<li>
+<h4>No Administrative Privileges Needed</h4>
+<p>If you are traveling and need to open your secure USB on a client's computer, a hotel business center, or a university library, you likely won't have admin rights. High-quality portable encryption tools are designed to execute and unlock your virtual vault entirely in user-space, preventing friction when you need your data most.</p>
+<figure class="content-image feature-image"><img alt="Protected documents inside an encrypted data security workspace" decoding="async" loading="lazy" src="https://i.ibb.co/Kj8Tw5y3/Protecting-Documents.jpg"/></figure></li>
+</ul>
+</section>
+<section class="bg-tint" id="comparison" style="padding: 64px 40px; border-radius: var(--radius-card);">
+<h2>Windows Hello Security Key vs. Encryption Software</h2>
+<p>It is vital to deploy the correct technology for your specific threat model.</p><figure class="content-image"><img alt="USB flash drive security best practices for lost drive protection" decoding="async" loading="lazy" src="https://i.ibb.co/HDN357D3/usb-flash-drive-security-best-practices.jpg"/></figure>
+<div class="compare-wrap">
+<div class="compare-card">
+<h4 style="font-size: 1.5rem; margin-bottom: 24px;">FIDO2 Security Key</h4>
+<div class="compare-row"><span class="compare-label">Primary Goal</span> <span class="compare-val">Identity Authentication</span></div>
+<div class="compare-row"><span class="compare-label">Hardware Needed</span> <span class="compare-val">YubiKey, Titan, etc.</span></div>
+<div class="compare-row"><span class="compare-label">Protects Lost USBs?</span> <span class="compare-val">No</span></div>
+<div class="compare-row"><span class="compare-label">Setup Complexity</span> <span class="compare-val">Moderate (OS Level)</span></div>
+<div class="compare-row"><span class="compare-label">Ideal User</span> <span class="compare-val">Remote workers securing PC logins.</span></div>
+</div>
+<div class="compare-card winner">
+<h4 style="font-size: 1.5rem; margin-bottom: 24px; color: var(--color-primary-accent);">Folder Lock / <a href="https://nl.afterdawn.com/downloads/beveiliging/encryptie/usb-secure.cfm" rel="noopener noreferrer" target="_blank">USB Secure</a></h4>
+<div class="compare-row"><span class="compare-label">Primary Goal</span> <span class="compare-val">Data Encryption</span></div>
+<div class="compare-row"><span class="compare-label">Hardware Needed</span> <span class="compare-val">Any Standard USB Drive</span></div>
+<div class="compare-row"><span class="compare-label">Protects Lost USBs?</span> <span class="compare-val">Yes (AES-256)</span></div>
+<div class="compare-row"><span class="compare-label">Setup Complexity</span> <span class="compare-val">Low (Plug &amp; Play)</span></div>
+<div class="compare-row"><span class="compare-label">Ideal User</span> <span class="compare-val">Anyone transporting sensitive files.</span></div>
+</div>
+</div>
+</section>
+<section id="quiz">
+<h2>Interactive: Security Architecture Quiz</h2>
+<p>Still unsure how to structure your security? Use this quick diagnostic tool.</p><figure class="content-image"><img alt="Security shield illustration for choosing the right protection architecture" decoding="async" loading="lazy" src="https://i.ibb.co/bjywWFhL/security-shield-protecting.jpg"/></figure>
+<div class="tool-box">
+<div class="quiz-group">
+<p>1. What is your primary security concern right now?</p>
+<label class="quiz-option"><input name="q1" type="radio" value="login"/> Preventing hackers from logging into my Microsoft Account or desktop.</label>
+<label class="quiz-option"><input name="q1" type="radio" value="files"/> Stopping people from viewing confidential files if I lose my flash drive.</label>
+</div>
+<div class="quiz-group">
+<p>2. What environment will you be operating in?</p>
+<label class="quiz-option"><input name="q2" type="radio" value="corp"/> A managed corporate network using Azure AD.</label>
+<label class="quiz-option"><input name="q2" type="radio" value="roam"/> Moving between personal computers, client offices, and public PCs.</label>
+</div>
+<button class="btn btn-primary" onclick="runSecurityQuiz()">Calculate Recommendation</button>
+<div id="quiz-result">
+<h4 style="margin-bottom: 8px;">Recommended Architecture:</h4>
+<p id="quiz-result-text"></p>
+</div>
+</div>
+</section>
+<section id="tutorial">
+<h2>How to Set Password to Pendrive in Windows 11</h2>
+<p>If the quiz directed you toward file-level protection, here is the exact deployment method utilizing a dedicated portable security application.</p><figure class="content-image"><img alt="Windows File Explorer showing USB drive contents during verification" decoding="async" loading="lazy" src="https://i.ibb.co/35v0S8cp/Windows-file-explorer.jpg"/></figure>
+
+<div class="article-expand" id="pendrive-expand"><ol>
+<li><strong>Initialize the Drive:</strong> Plug your standard flash drive into your computer. Ensure it is formatted correctly (FAT32, NTFS, or exFAT all work).</li>
+<li><strong>Deploy the Application:</strong> Run the setup file for your chosen encryption software and select the USB drive as the installation target. The software will place a self-executing vault interface directly onto the root of the drive.</li>
+<li><strong>Establish Cryptographic Keys:</strong> Launch the application from the pendrive. You will be asked to create a master password. <em>Warning:</em> Because this utilizes high-level 256-bit AES cryptographic standards, there is no backdoor. If you lose this password, the encrypted data cannot be recovered.</li>
+<li><strong>Secure the Payload:</strong> Move your sensitive documents (financial models, private photos, proprietary code) into the secure interface. Click the lock command.</li>
+<li><strong>Verification:</strong> Open Windows File Explorer and view the pendrive. Your files will no longer be visible. The only item visible will be the security executable required to unlock the drive on the next machine.</li>
+</ol></div><button aria-controls="pendrive-expand" aria-expanded="false" class="read-more-btn" onclick="toggleArticleExpand(this)" type="button">Read more</button></section>
+<section class="bg-tint" id="data-privacy" style="padding: 64px 40px; border-radius: var(--radius-card);">
+<h2>Data Privacy vs Data Security &mdash; Understanding the Difference</h2>
+<p>In the context of portable storage, these two concepts overlap but serve distinct functions.</p><figure class="content-image"><img alt="Sensitive personal data protected by privacy and security controls" decoding="async" loading="lazy" src="https://i.ibb.co/Zpt5NfpT/sensitive-personal-data.jpg"/></figure>
+<p><strong>Data Privacy</strong> governs who is authorized to view your information and how it is collected. Regulations like the GDPR (General Data Protection Regulation) and CCPA (California Consumer Privacy Act) dictate that organizations must handle personal data transparently and minimize data collection.</p>
+<p><strong>Data Security</strong> is the technical implementation of that privacy. If you carry a pendrive with client information, privacy laws dictate you must protect it. Data security tools&mdash;like <a href="https://www.analyticsinsight.net/tech-news/how-to-encrypt-and-protect-usb-flash-drives-external-drives-and-memory-cards" rel="noopener noreferrer" target="_blank">AES-256 encryption</a> and FIDO2 authentication keys&mdash;are the mechanisms that ensure compliance by making the data unreadable to unauthorized parties in the event of hardware loss or network breach.</p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting Log Events &amp; Configurations</h2>
+<h3>Windows Event ID 6416: Security Log USB Device</h3>
+<p>IT administrators frequently monitor Event ID 6416. This log indicates that a new external device was recognized by the system. This triggers whether a user inserts a FIDO2 token or a standard encrypted pendrive. Monitoring this is essential for tracking <a href="https://security.stackexchange.com/questions/118854/attacks-via-physical-access-to-usb-dma" rel="noopener noreferrer" target="_blank">physical access attempts</a> across an enterprise network.</p><figure class="content-image"><img alt="Monitoring USB access attempts and device security events" decoding="async" loading="lazy" src="https://i.ibb.co/DPBbtBCG/Monitoring-Attempts.jpg"/></figure>
+<h3>Windows Asking for Security Key Unexpectedly</h3>
+<p>If your system constantly interrupts you with a prompt to "Insert your security key into the USB port," but you never configured one, your machine is likely tied to an organizational policy (Azure AD) enforcing strict multi-factor authentication. Alternatively, a background browser tab may have triggered a WebAuthn request. Navigate to <strong>Settings &gt; Accounts &gt; Access work or school</strong> to check your organizational ties.</p>
+<div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<code id="cmd-snippet">
+# To check active connected USB devices via PowerShell for auditing:
+Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '^USB' }
+          </code>
+</div>
+</section>
+<section id="faq">
+<h2>Frequently Asked Questions</h2>
+<div class="faq-list">
+<div class="faq-item">
+<button aria-expanded="false" class="faq-btn">
+<span>Can any USB drive be used as a Windows Hello security key?</span>
+<span class="faq-preview">No, standard thumb drives lack the hardware...</span>
+<span class="faq-icon">+</span>
+</button>
+<div class="faq-content">
+<div class="faq-content-inner">
+<p>No. Windows Hello requires a specialized hardware device that explicitly supports the FIDO2/WebAuthn standard (such as a YubiKey or Google Titan key). You cannot use a regular, off-the-shelf USB flash drive to log into Windows natively.</p>
+</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-btn">
+<span>How do I set a password in a pendrive in Windows 11?</span>
+<span class="faq-preview">You must use dedicated encryption software...</span>
+<span class="faq-icon">+</span>
+</button>
+<div class="faq-content">
+<div class="faq-content-inner">
+<p>Windows 11 Home does not include built-in features to securely <a href="https://windowsreport.com/encrypt-usb-flash-drive-windows/" rel="noopener noreferrer" target="_blank">password-protect individual flash drives</a> for portable cross-computer use. You must utilize third-party portable encryption software that installs an encrypted vault directly onto the drive.</p>
+</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-btn">
+<span>How to recover access if I lose my Windows Hello security key?</span>
+<span class="faq-preview">You will need to rely on your backup...</span>
+<span class="faq-icon">+</span>
+</button>
+<div class="faq-content">
+<div class="faq-content-inner">
+<p>If you lose the physical FIDO2 key used to log into Windows, you must use a backup authentication method configured on your Microsoft Account (such as an authenticator app code, an SMS text, or a backup email address). Once you regain access, immediately revoke the lost key from your account settings.</p>
+</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-btn">
+<span>What is Windows Hello for Business?</span>
+<span class="faq-preview">It is the enterprise-grade version managed...</span>
+<span class="faq-icon">+</span>
+</button>
+<div class="faq-content">
+<div class="faq-content-inner">
+<p>Windows Hello for Business replaces passwords with strong two-factor authentication on PCs and mobile devices. It utilizes biometric or PIN-based credentials tied cryptographically to a specific device, managed through Azure Active Directory or Group Policy, providing higher credential isolation than consumer Windows Hello.</p>
+</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-btn">
+<span>Can I use a regular USB as a security key?</span>
+<span class="faq-preview">Only to encrypt files, not to log into the OS...</span>
+<span class="faq-icon">+</span>
+</button>
+<div class="faq-content">
+<div class="faq-content-inner">
+<p>You can use a regular USB drive to secure files by adding encryption software to it. However, you cannot use a regular USB drive as a hardware token to unlock the Windows Operating System itself; that strictly requires a chip capable of public key cryptography.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section style="text-align: center; padding-top: 40px; border-top: 1px solid var(--color-border);">
+<figure class="content-image cta-image"><img alt="Data security devices protected by an encrypted lock graphic" decoding="async" loading="lazy" src="https://i.ibb.co/ZC5xRkQ/data-security-devices-lock-illustration.png"/></figure><h2>Secure Your Portable Data Today</h2>
+<p style="max-width: 600px; margin: 0 auto 32px;">Don't wait for a lost pendrive to become a privacy nightmare. Secure your sensitive files with military-grade encryption that travels everywhere your drive goes.</p>
+<div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+<a class="btn btn-primary" href="https://www.newsoftwares.net/download/folderlock10-en/folder-lock-en.exe" rel="noopener noreferrer" target="_blank">Download Folder Lock &rarr;</a>
+<a class="btn btn-outline" href="https://store.newsoftwares.net/?add=fl10" rel="noopener noreferrer" target="_blank">Explore Pricing Plans &rarr;</a>
+</div>
+</section>
+</main>
+</div>
+<footer>
+<div class="footer-grid">
+<div class="footer-col">
+<div class="footer-brand"><span aria-hidden="true" class="security-mark">
+<svg focusable="false" role="img" viewbox="0 0 64 64">
+<rect height="36" rx="3" width="50" x="7" y="16"></rect>
+<path d="M18 16v-3c0-7.2 5.8-13 14-13s14 5.8 14 13v3"></path>
+<path d="M24 16v-3c0-4 3.1-7 8-7s8 3 8 7v3"></path>
+<circle cx="32" cy="34" r="5"></circle>
+<path d="M32 39v7"></path>
+</svg>
+</span><h4>Hello Security Hub</h4></div>
+<p>The definitive resource for understanding Windows authentication, portable data encryption, and endpoint security protocols.</p>
+</div>
+<div class="footer-col">
+<h4>Quick Links</h4>
+<ul>
+<li><a href="#intent-gap">Guide Overview</a></li>
+<li><a href="#fido2-setup">Setup FIDO2 Key</a></li>
+<li><a href="#usb-protection">Protect Pendrives</a></li>
+<li><a href="#comparison">Method Comparison</a></li>
+</ul>
+</div>
+<div class="footer-col">
+<h4>Legal &amp; Privacy</h4>
+<ul>
+<li><a href="#">Privacy Policy</a></li>
+<li><a href="#">Terms of Use</a></li>
+<li><a href="#">Disclaimer</a></li>
+<li><a href="#">Editorial Policy</a></li>
+</ul>
+</div>
+</div>
+<div class="footer-bottom">
+<p class="disclaimer">This site operates as an independent editorial resource. Some links may earn a referral commission at no cost to you. Product recommendations reflect editorial judgment and independent assessment.</p>
+<p>Folder Lock and USB Secure are developed by <a href="https://www.newsoftwares.net" rel="noopener noreferrer" style="color: var(--color-white);" target="_blank">NewSoftwares.net</a>.</p>
+<p style="margin-top: 8px; opacity: 0.6;">&copy; 2026 Hello Security Hub. All rights reserved.</p>
+</div>
+</footer>
+<script defer="">
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Smooth Scrolling
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          const targetId = this.getAttribute('href');
+          if (!targetId || targetId === '#') return;
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) {
+            e.preventDefault();
+            targetElement.scrollIntoView({ behavior: 'smooth' });
+          }
+          const nav = document.getElementById('nav-menu');
+          if (nav) nav.classList.remove('is-open');
+        });
+      });
+
+      // Sticky Header Scroll Effect
+      const header = document.getElementById('header');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 20) {
+          header.classList.add('is-scrolled');
+        } else {
+          header.classList.remove('is-scrolled');
+        }
+      });
+
+      // Mobile Menu Toggle
+      const mobileBtn = document.getElementById('mobile-btn');
+      const navMenu = document.getElementById('nav-menu');
+      mobileBtn.addEventListener('click', () => {
+        navMenu.classList.toggle('is-open');
+      });
+
+      // FAQ Accordion Logic (V4)
+      const faqBtns = document.querySelectorAll('.faq-btn');
+      faqBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+          const content = btn.nextElementSibling;
+          
+          // Close all others
+          faqBtns.forEach(otherBtn => {
+            otherBtn.setAttribute('aria-expanded', 'false');
+            otherBtn.nextElementSibling.style.maxHeight = null;
+          });
+          
+          if (!isExpanded) {
+            btn.setAttribute('aria-expanded', 'true');
+            content.style.maxHeight = content.scrollHeight + "px";
+          }
+        });
+      });
+
+      // TOC Intersection Observer
+      const sections = document.querySelectorAll('section, article');
+      const tocLinks = document.querySelectorAll('.toc a');
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(link => {
+              link.classList.remove('active');
+              if (link.getAttribute('href') === `#${entry.target.id}`) {
+                link.classList.add('active');
+              }
+            });
+          }
+        });
+      }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+
+      sections.forEach(section => {
+        if(section.id) observer.observe(section);
+      });
+      
+    });
+
+    // Interactive Quiz Logic
+    function runSecurityQuiz() {
+      const q1 = document.querySelector('input[name="q1"]:checked');
+      const q2 = document.querySelector('input[name="q2"]:checked');
+      const resultBox = document.getElementById('quiz-result');
+      const resultText = document.getElementById('quiz-result-text');
+      
+      if (!q1 || !q2) {
+        alert("Please select an answer for both questions.");
+        return;
+      }
+      
+      resultBox.style.display = 'block';
+      
+      if (q1.value === 'login') {
+        resultText.innerHTML = "You require a <strong>FIDO2 Security Key</strong>. Buy a specialized hardware token and configure it via Windows Settings &gt; Accounts &gt; Sign-in options. This handles OS-level identity authentication.";
+      } else if (q1.value === 'files' && q2.value === 'corp') {
+        resultText.innerHTML = "You require an <strong>Enterprise Endpoint Solution</strong> (like USB Block) to prevent data leaks across the network, paired with encrypted drives for authorized personnel.";
+      } else {
+        resultText.innerHTML = "You require <strong>Portable Data Encryption</strong> (like Folder Lock or USB Secure). Standard Windows Hello cannot encrypt your pendrive. You must use software to create an AES-256 encrypted vault on the drive itself.";
+      }
+    }
+
+    // Copy Code Snippet
+    function copyCode(btn) {
+      const code = document.getElementById('cmd-snippet').innerText;
+      navigator.clipboard.writeText(code.trim()).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied!';
+        setTimeout(() => { btn.innerText = originalText; }, 2000);
+      });
+    }
+  
+
+    // Newspaper article expand
+    function toggleArticleExpand(btn) {
+      const content = document.getElementById(btn.getAttribute('aria-controls'));
+      const isOpen = content.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      btn.textContent = isOpen ? 'Read less' : 'Read more';
+    }
+</script>
+<!-- Schema Markup -->
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "HelloSecurityHub",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://example.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+  </script>
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can any USB drive be used as a Windows Hello security key?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Windows Hello requires a specialized hardware device that explicitly supports the FIDO2/WebAuthn standard (such as a YubiKey or Google Titan key). You cannot use a regular, off-the-shelf USB flash drive to log into Windows natively."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I set a password in a pendrive in Windows 11?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Windows 11 Home does not include built-in features to securely password-protect individual flash drives for portable cross-computer use. You must utilize third-party portable encryption software that installs an encrypted vault directly onto the drive."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How to recover access if I lose my Windows Hello security key?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "If you lose the physical key used to log into Windows, you must use a backup authentication method configured on your Microsoft Account (such as an authenticator app code, an SMS text, or a backup email address). Once you regain access, immediately revoke the lost key from your account settings."
+          }
+        }
+      ]
+    }
+  </script>
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "NewSoftwares.net",
+      "url": "https://www.newsoftwares.net",
+      "logo": "https://www.newsoftwares.net/images/logo.png"
+    }
+  </script>
+</body>
+</html>
