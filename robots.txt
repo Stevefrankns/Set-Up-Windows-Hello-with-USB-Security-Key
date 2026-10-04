@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://stevefrankns.github.io/Set-Up-Windows-Hello-with-USB-Security-Key/sitemap.xml
